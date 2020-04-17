@@ -1,5 +1,7 @@
 # Project Moon Hermit
 
+![nice gif](nice.gif)
+
 Based on original *sbotc* by @Cel.
 
 Uses Lua 5.3
