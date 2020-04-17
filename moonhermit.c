@@ -1087,9 +1087,9 @@ static int luamux(lua_State *L) {
 
 
 	// method invocation
-	printf("method: %s\n", method);
-	printf("argument: %s\n", argument);
-	printf("typestr: %s\n", typestr);
+	// printf("method: %s\n", method);
+	// printf("argument: %s\n", argument);
+	// printf("typestr: %s\n", typestr);
 
 
 	muxrpc_call(&bs, method, argument, type, typestr, 1);

@@ -1,17 +1,17 @@
 print("hello from " .. _VERSION)
 
-local whoami, error = ssb:whoami()
+local whoami, err = ssb:whoami()
 
-if (not error) then
+if (not err) then
     print(string.format("you are %s", whoami.id))
 else
-    print(string.format("some error happened?! %s", error))
+    print(string.format("some error happened?! %s", err))
 end
 
-local result, error = ssb:latestSequence(whoami.id)
+local result, err = ssb:latestSequence(whoami.id)
 
-if (not error) then
+if (not err) then
     print(string.format("latest sequence is %d", result))
 else
-    print(string.format("some error happened?! %s", error))
+    print(string.format("some error happened?! %s", err))
 end
