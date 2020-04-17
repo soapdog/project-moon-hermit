@@ -1,0 +1,190 @@
+.Dd 2017-06-03
+.Dt SBOTC 1
+.Os SSBC
+.ds REPO ssb://%133ulDgs/oC1DXjoK04vDFy6DgVBB/Zok15YJmuhD5Q=.sha256
+.Sh NAME
+.Nm sbotc
+.Nd Call a scuttlebot/secret-stack RPC method
+.Sh SYNOPSIS
+.Nm
+.Op Fl j
+.Op Fl l
+.Op Fl r
+.Op Fl T
+.Op Fl e
+.Op Fl a
+.
+.Oo
+.Fl n
+|
+.Op Fl c Ar cap
+.Op Fl k Ar key
+.Op Fl K Ar keypair_seed
+.Oc
+.
+.Oo
+.Op Fl s Ar host
+.Op Fl p Ar port
+.Oo
+.Fl 4
+|
+.Fl 6
+.Oc
+|
+.Op Fl u Ar socket_path
+.Oc
+.
+.Oo
+.Fl a
+|
+.Op Fl t Ar type
+.Ar method
+.Op Ar argument ...
+.Oc
+.Sh DESCRIPTION
+Connect to a scuttlebot/secret-stack server, and call a method on it, with
+standard I/O.
+.Sh OPTIONS
+.Bl -tag
+.It Fl j
+Send stdin data as JSON.
+.It Fl l
+Don't output newlines after string or JSON packets.
+.It Fl r
+Raw mode. Disables stdin line buffering/editing and echoing. Implies
+.Fl l .
+.It Fl e
+Encode arguments as strings, rather than expecting them to be JSON-encoded.
+.It Fl T
+Test using shs1-testsuite protocol. Instead of connecting to a server and running
+a command, connect to stdio. On successful handshake, output concatenation of
+the encryption key, encryption nonce, decryption key and decryption nonce.
+.It Fl a
+Passthrough mode. Instead of making a muxrpc call, pass through the box-stream
+to stdio.
+.It Fl n
+Noauth mode. Skip secret-handshake authentication and box-stream encryption.
+This option makes the
+.Fl k ,
+.Fl K ,
+and
+.Fl c
+options have no effect and output a warning if used.
+.It Fl 4
+Connect to server over IPv4 only.
+.It Fl 6
+Connect to server over IPv6 only.
+.It Fl c Ar cap
+Capability key for secret-handshake. Default is SSB's capability key,
+.Li 1KHLiKZvAvjbY1ziZEHMXawbCEIM6qwjCDm3VYRan/s= .
+.It Fl s Ar host
+The hostname to connect to. Default is localhost. If set to localhost and connection to localhost fails,
+.Nm
+may attempt to connect to other local interface addresses.
+.It Fl p Ar port
+The port to connect to. Default is 8008.
+.It Fl u Ar socket_path
+Unix socket path to connect to, instead of TCP socket. Conflicts with
+.Fl p
+and
+.Fl s .
+.It Fl k Ar key
+The key to connect to. Default is your public key, as read from your
+private key file.
+.It Fl K Ar keypair_seed
+Private key seed to use for secret-handshake. Default is to use the private key
+from your
+.Pa ~/.ssb/secret
+file or other secret file according to the environmental variables described in
+.Sx ENVIRONMENT .
+.It Fl t Ar type
+The type of method:
+.Dq async ,
+.Dq source ,
+.Dq sink ,
+or
+.Dq duplex .
+Default is to look up the method in
+.Pa ~/.ssb/manifest.json .
+.It Ar method
+Method name.
+.It Op Ar argument ...
+Arguments to pass to the method call. Each argument must be JSON-encoded, unless the
+.Fl e
+option is used, in which the arguments are treated as strings.
+.El
+.Sh ENVIRONMENT
+.Bl -tag
+.It Ev ssb_appname
+Name of the app. Default is
+.Dq ssb .
+Used to construct the app's directory if
+.Ev ssb_path
+is not present.
+.It Ev ssb_path
+Path to the app's directory. Default is to use
+.Ev ssb_appname to construct the path as
+.Dq ~/.<ssb_appname>
+.El
+.Sh FILES
+.Bl -tag -width -indent
+.It Pa ~/.ssb/secret
+Your private key, used for authenticating to the server with the
+secret-handshake protocol.
+.It Pa ~/.ssb/manifest.json
+A map of method names to method types.
+.It Pa ~/.ssb/config
+JSON file containing key, host, port, and/or SHS cap key to use if the
+.Fl s ,
+.Fl p
+or
+.Fl c
+options are not given, respectively.
+.It Pa ~/.ssb/socket
+UNIX socket stream file for noauth connections.
+If none of the options
+.Fl s ,
+.Fl p ,
+.Fl u ,
+.Fl c ,
+.Fl k ,
+.Fl K ,
+.Fl c ,
+.Fl 4 ,
+.Fl 6 ,
+or
+.Fl T
+are specified,
+.Nm
+will attempt to connect in noauth mode to this socket file. If the socket file
+is not present or the connection fails,
+.Nm
+will fall back to connecting with TCP and secret-handshake according to the
+config file - unless the
+.Fl n
+option is specified, in which case the command will fail.
+.El
+.Pp
+The base path
+.Dq ~/.ssb/
+of these file names may be changed by setting
+.Ev ssb_appname
+or
+.Ev ssb_path .
+.Sh EXIT STATUS
+.Bl -tag -width Ds
+.It 0
+The command completed successfully.
+.It 1
+An error occurred.
+.It 2
+The command completed with an error.
+.El
+.Sh AUTHORS
+.Nm
+was written by
+.An cel Aq @f/6sQ6d2CMxRUhLpspgGIulDxDCwYD7DzFzPNr7u5AU=.ed25519 .
+.Sh BUGS
+.Pp
+Please report any bugs by making a post on SSB mentioning the repo,
+.Lk \*[REPO]
