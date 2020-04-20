@@ -21,15 +21,15 @@ function displayContactMsg(m)
     print(string.format("%s %s %s", user, action, target))
 end
 
-local msgs, error = ssb:createHistoryStream({
+local msgs, err = ssb:createHistoryStream({
     id = "@0xkjAty6RSr5uhbAvi0rbVR2g9Bz+89qiKth48ECQBE=.ed25519",
     limit = 50000
 })
 
-if (not error) then
+if (not err) then
     stream(msgs).filter(justContacts).foreach(displayContactMsg)
     local contactMsgs = stream(msgs).filter(justContacts).toarray()
     print(string.format("%d contact msgs", #contactMsgs ))
 else
-    print(error)
+    print(err)
 end
