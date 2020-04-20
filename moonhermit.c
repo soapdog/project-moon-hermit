@@ -774,7 +774,7 @@ static void ps_reject(struct boxs *bs, size_t len, int32_t req, enum pkt_flags f
 	write_buf(STDERR_FILENO, "\n");
 }
 
-static enum stream_state muxrpc_read_source_1(struct boxs *bs, int outfd, int req_id) {
+static enum stream_state muxrpc_read_source_1(lua_State *L, struct boxs *bs, int outfd, int req_id) {
 	enum pkt_flags flags;
 	size_t len;
 	int32_t req;
@@ -795,14 +795,14 @@ static enum stream_state muxrpc_read_source_1(struct boxs *bs, int outfd, int re
 		if (rc == 1) return stream_state_ended_error;
 		return stream_state_ended_ok;
 	}
-	rc = bs_read_out(bs, outfd, len);
-	if (rc < 0) err(1, "bs_read_out");
+	rc = bs_read_into_lua(L, bs, len);
+	if (rc < 0) err(1, "bs_read_into_lua");
 	return stream_state_open;
 }
 
 static int muxrpc_read_source(lua_State *L, struct boxs *bs,int outfd, int req_id) {
 	enum stream_state state;
-	while ((state = muxrpc_read_source_1(bs, outfd, req_id)) == stream_state_open);
+	while ((state = muxrpc_read_source_1(L, bs, outfd, req_id)) == stream_state_open);
 	return state == stream_state_ended_ok ? 0 :
 		state == stream_state_ended_error ? 2 : 1;
 }
@@ -875,7 +875,7 @@ static int muxrpc_write_sink(lua_State *L, struct boxs *bs, int infd, enum pkt_t
 		rc = select(maxfd + 1, &rd, 0, 0, NULL);
 		if (rc < 0) err(1, "select");
 		if (FD_ISSET(infd, &rd)) in = muxrpc_write_sink_1(bs, infd, ptype, req_id);
-		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(bs, -1, req_id);
+		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(L, bs, -1, req_id);
 	}
 
 	return in == stream_state_ended_ok && out == stream_state_ended_ok ? 0 :
@@ -903,7 +903,7 @@ static int muxrpc_write_blob_add(lua_State *L, struct boxs *bs, int infd,int out
 		rc = select(maxfd + 1, &rd, 0, 0, NULL);
 		if (rc < 0) err(1, "select");
 		if (FD_ISSET(infd, &rd)) in = muxrpc_write_sink_1_hashed(bs, infd, &hash_state, req_id);
-		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(bs, -1, req_id);
+		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(L, bs, -1, req_id);
 	}
 
 	rc = crypto_hash_sha256_final(&hash_state, hash);
@@ -934,7 +934,7 @@ static int muxrpc_duplex(lua_State *L, struct boxs *bs, int infd,int outfd, enum
 		rc = select(maxfd + 1, &rd, 0, 0, NULL);
 		if (rc < 0) err(1, "select");
 		if (FD_ISSET(infd, &rd)) in = muxrpc_write_sink_1(bs, infd, in_ptype, req_id);
-		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(bs, outfd, req_id);
+		if (FD_ISSET(sfd, &rd)) out = muxrpc_read_source_1(L, bs, outfd, req_id);
 	}
 
 	return in == stream_state_ended_ok && out == stream_state_ended_ok ? 0 :
@@ -1086,10 +1086,13 @@ static int luamux(lua_State *L) {
 	}
 
 
-	// method invocation
-	// printf("method: %s\n", method);
-	// printf("argument: %s\n", argument);
-	// printf("typestr: %s\n", typestr);
+	//method invocation
+	printf("\n--------------[ DEBUG ]--------------------------------\n");
+	printf("method: %s\n", method);
+	printf("argument: %s\n", argument);
+	printf("typestr: %s\n", typestr);
+	printf("-------------------------------------------------------\n");
+
 
 
 	muxrpc_call(&bs, method, argument, type, typestr, 1);
