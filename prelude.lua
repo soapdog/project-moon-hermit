@@ -1,5 +1,14 @@
 local json = require("json")
 local pprint = require("pprint")
+local stream = require("stream")
+
+function parseMsgs(arr) 
+    local r = {}
+    for i, msg in ipairs(arr) do
+        r[i] = json.parse(msg)
+    end
+    return r
+end
 
 local mt = {
     __index = function(self, k)
@@ -17,7 +26,11 @@ local mt = {
             local status, retval = pcall(muxrpc, k, ars)
 
             if (status) then
-                res = json.parse(retval)
+                if (type(retval) ~= "table") then
+                    res = json.parse(retval)
+                else
+                    res = parseMsgs(retval)
+                end
                 err = false
             else 
                 res = false

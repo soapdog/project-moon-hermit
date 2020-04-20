@@ -124,13 +124,15 @@ static const unsigned char ssb_cap[] = {
 struct termios orig_tc;
 struct boxs bs;
 
+static bool debugmsg = false;
+
 static void reset_termios() {
 	int rc = tcsetattr(STDIN_FILENO, TCSANOW, &orig_tc);
 	if (rc < 0) warn("tcsetattr");
 }
 
 static void usage() {
-	fputs("usage: sbotc [-j] [-T] [-l] [-r] [-e]\n"
+	fputs("usage: sbotc [-d] [-j] [-T] [-l] [-r] [-e]\n"
 	      "             [ -n | [-c <cap>] [-k <key>] [-K <keypair_seed>] ]\n"
 	      "             [ [-s <host>] [-p <port>] [ -4 | -6 ] | [-u <socket_path>] ]\n"
 	      "             [ -a | [-t <type>] <method> [<argument>...] ]\n", stderr);
@@ -652,6 +654,17 @@ static int bs_read_into_lua(lua_State *L, struct boxs *bs, size_t len) {
 	return 0;
 }
 
+static int bs_accumulate_into_lua(lua_State *L, struct boxs *bs, size_t len) {
+	char buf[len];
+	int rc;
+	rc = bs_read(bs, buf, len);
+	luaL_checktype(L, -1, LUA_TTABLE); // top of the stack is a table?
+	size_t tlen = lua_rawlen(L, -1); // how many elements in table.
+	lua_pushstring(L, buf);
+	lua_rawseti(L, -2, tlen+1);
+	return 0;
+}
+
 static int bs_read_error(struct boxs *bs, int errfd, enum pkt_flags flags, size_t len) {
 	// suppress printing "true" indicating end without error
 	if (flags & pkt_flags_json && len == 4) {
@@ -795,8 +808,8 @@ static enum stream_state muxrpc_read_source_1(lua_State *L, struct boxs *bs, int
 		if (rc == 1) return stream_state_ended_error;
 		return stream_state_ended_ok;
 	}
-	rc = bs_read_into_lua(L, bs, len);
-	if (rc < 0) err(1, "bs_read_into_lua");
+	rc = bs_accumulate_into_lua(L, bs, len);
+	if (rc < 0) err(1, "bs_accumulate_into_lua");
 	return stream_state_open;
 }
 
@@ -1086,14 +1099,14 @@ static int luamux(lua_State *L) {
 	}
 
 
-	//method invocation
-	printf("\n--------------[ DEBUG ]--------------------------------\n");
-	printf("method: %s\n", method);
-	printf("argument: %s\n", argument);
-	printf("typestr: %s\n", typestr);
-	printf("-------------------------------------------------------\n");
-
-
+	if (debugmsg) {
+		//method invocation
+		printf("\n--------------[ DEBUG ]--------------------------------\n");
+		printf("method: %s\n", method);
+		printf("argument: %s\n", argument);
+		printf("typestr: %s\n", typestr);
+		printf("-------------------------------------------------------\n");
+	}
 
 	muxrpc_call(&bs, method, argument, type, typestr, 1);
 
@@ -1102,6 +1115,7 @@ static int luamux(lua_State *L) {
 			rc = muxrpc_read_async(L, &bs, fd, 1);
 			break;
 		case muxrpc_type_source:
+			lua_newtable(L);
 			rc = muxrpc_read_source(L, &bs, fd, 1);
 			break;
 		case muxrpc_type_sink:
@@ -1180,6 +1194,7 @@ int main(int argc, char *argv[]) {
 			case '4': ipv4_arg = true; break;
 			case '6': ipv6_arg = true; break;
 			case 'a': passthrough = true; break;
+			case 'd': debugmsg = true; break;
 			default: usage();
 		}
 	}
