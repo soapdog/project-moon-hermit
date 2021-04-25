@@ -2,3 +2,12 @@ sbotc
 moonhermit
 moonhermit-shared
 moonhermit-static
+
+*.so
+*.a
+*.la
+*.dylib
+*.o
+
+
+.DS_Store

@@ -1,15 +1,20 @@
 BIN = moonhermit
 
+SODIUM = libsodium-1.0.18
+LUA = lua-5.4.3
+
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 MANDIR = $(PREFIX)/share/man
 
-CFLAGS = -Wall -Werror -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-unused-function -I/usr/include/lua5.3
 
-ifdef STATIC
-	LDLIBS = -l:libsodium.a -l:liblua5.3.a
+CFLAGS = -Wall -Werror -Wextra -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -I$(PWD)/vendor/$(LUA)/src -I$(PWD)/vendor/$(SODIUM)/sodium-build/include
+
+ifdef SHARED
+	LDLIBS = -lsodium -llua5.4
 else
-	LDLIBS = -lsodium -llua5.3
+	LDFLAGS= -L$(PWD)/vendor/$(SODIUM)/sodium-build/lib -L$(PWD)/vendor/$(LUA)/src
+	LDLIBS = -llua  -lsodium
 endif
 
 all: $(BIN)
@@ -37,6 +42,19 @@ test-shs1:
 
 clean:
 	@rm -vf $(BIN)
+	cd ./vendor/$(SODIUM) && make clean
+	cd ./vendor/$(LUA) && make clean
+	
+deps-sodium:
+	cd ./vendor/$(SODIUM) && \
+	./configure --prefix=$(PWD)/vendor/$(SODIUM)/sodium-build/ && \
+	make && make check && make install && rm $(PWD)/vendor/$(SODIUM)/sodium-build/lib/*.dylib
+	
+deps-lua:
+	cd ./vendor/$(LUA) && \
+	make
+	
+deps: deps-sodium deps-lua
 
 .PHONY:
 	all install link uninstall test-shs1 clean

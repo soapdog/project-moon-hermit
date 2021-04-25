@@ -2,9 +2,9 @@
 
 ![nice gif](nice.gif)
 
-Based on original *sbotc* by @Cel.
+Based on original _sbotc_ by @Cel.
 
-Uses Lua 5.3
+Uses Lua 5.4
 
 This is a Lua interpreter that contains an SSB Client API.
 
@@ -12,14 +12,15 @@ This is a Lua interpreter that contains an SSB Client API.
 
 Only async methods implemented so far, the others will error out.
 
+## Build
 
-## Install
+I have vendored `lua-5.4.3` and `libsodium-1.0.18`. To build them:
 
-Install the dependencies: *sodium* and *lua 5.3*. On Debian: 
+```
+make deps
+```
 
-`sudo apt-get install libsodium-dev lua5.3 liblua5.3-dev`
-
-Compile the interpreter:
+If you want to build a shared version of moonhermit. To compile the interpreter:
 
 ```sh
 make
@@ -27,7 +28,7 @@ make
 
 ## Compile options
 
-To build a binary statically linked with libsodium, use `make STATIC=1`
+To build a binary that uses shared libraries, use `make SHARED=1`
 
 ## Usage
 

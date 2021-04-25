@@ -1039,16 +1039,13 @@ static int args_to_json(char *out, size_t outlen, unsigned int argc, char *argv[
 }
 
 static int luamux(lua_State *L) {
-	int i, rc;
-	size_t argument_len;
+	int rc;
 	ssize_t len;
-	bool strings = false;
 	const char *typestr = NULL, *methodstr = NULL, *argument = NULL;
 	enum muxrpc_type type;
 	char method[256];
 	char app_dir[_POSIX_PATH_MAX];
 	enum pkt_type ptype = pkt_type_buffer;
-	bool errored = false;
 	
 	char *bp;
     size_t size;
