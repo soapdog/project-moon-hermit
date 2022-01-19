@@ -1,5 +1,4 @@
 -- counts contact messages.
-local pprint = require("pprint")
 
 function justContacts(m)
     return lookup(m, "value", "content", "type") == "contact"
@@ -13,12 +12,13 @@ function displayContactMsg(m)
 end
 
 local msgs, err = ssb:createHistoryStream({
-    id = "@0xkjAty6RSr5uhbAvi0rbVR2g9Bz+89qiKth48ECQBE=.ed25519",
+    id = arg[1],
     limit = 50000
 })
 
 if (not err) then
     stream(msgs).filter(justContacts).foreach(displayContactMsg)
+
     local contactMsgs = stream(msgs).filter(justContacts).toarray()
     print(string.format("%d contact msgs", #contactMsgs ))
 else
