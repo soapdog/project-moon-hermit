@@ -1,4 +1,4 @@
--- counts contact messages
+-- counts contact messages.
 local pprint = require("pprint")
 
 function justContacts(m)

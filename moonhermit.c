@@ -1131,7 +1131,7 @@ static int luamux(lua_State *L) {
 }
 
 int main(int argc, char *argv[]) {
-	int s, i, infd, outfd, rc;
+	int s, i, infd, outfd, rc, luafilepos;
 	const char *key = NULL;
 	const char *keypair_seed_str = NULL;
 	const char *host = NULL;
@@ -1158,6 +1158,7 @@ int main(int argc, char *argv[]) {
 	
 	// Create new interpreter
 	lua_State *L = luaL_newstate();
+
 	// Load built-in libs
 	luaL_openlibs(L);
 
@@ -1197,6 +1198,8 @@ int main(int argc, char *argv[]) {
 	}
 	if (i < argc) luafile = argv[i++];
 	else if (!passthrough) usage();
+
+	luafilepos = i;
 
 	if (ipv4_arg && ipv6_arg) errx(1, "options -4 and -6 conflict");
 	ip_family =
@@ -1284,6 +1287,19 @@ do_tcp_connect:
 	// initialize SSB library
 	lua_pushcfunction(L, luamux);
 	lua_setglobal(L, "muxrpc");
+
+	// create command-line arguments array.
+	lua_createtable(L, argc-2, 0);
+
+	int c = 0;
+	for (i = luafilepos; i <= argc; i++) {
+		lua_pushstring(L, argv[i]);
+		lua_rawseti (L, -2, c+1);
+		c++;
+	}
+
+	lua_setglobal( L, "arg" );
+
 
 	
 	// lua do file
