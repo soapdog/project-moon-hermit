@@ -11,6 +11,9 @@ function parseMsgs(arr)
 end
 
 function lookup(t, ...)
+    if t == nil then
+        return nil
+    end
     for _, k in ipairs{...} do
         t = t[k]
         if not t then
@@ -26,6 +29,8 @@ local mt = {
             local res, err = false
             
             local ars = table.pack(...)
+
+            k = k:gsub("_",".")
             
             if (#ars == 0) then
                 ars = "[]"

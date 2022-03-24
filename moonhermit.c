@@ -29,6 +29,7 @@
 #include <sys/un.h>
 #include <termios.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <sodium.h>
 
@@ -648,16 +649,14 @@ static int bs_read_out(struct boxs *bs, int fd, size_t len) {
 
 static int bs_read_into_lua(lua_State *L, struct boxs *bs, size_t len) {
 	char buf[len];
-	int rc;
-	rc = bs_read(bs, buf, len);
+	bs_read(bs, buf, len);
 	lua_pushstring(L, buf);
 	return 0;
 }
 
 static int bs_accumulate_into_lua(lua_State *L, struct boxs *bs, size_t len) {
 	char buf[len];
-	int rc;
-	rc = bs_read(bs, buf, len);
+	bs_read(bs, buf, len);
 	luaL_checktype(L, -1, LUA_TTABLE); // top of the stack is a table?
 	size_t tlen = lua_rawlen(L, -1); // how many elements in table.
 	lua_pushstring(L, buf);
@@ -1040,6 +1039,7 @@ static int args_to_json(char *out, size_t outlen, unsigned int argc, char *argv[
 
 static int luamux(lua_State *L) {
 	int rc;
+	int requestn = rand();
 	ssize_t len;
 	const char *typestr = NULL, *methodstr = NULL, *argument = NULL;
 	enum muxrpc_type type;
@@ -1102,28 +1102,29 @@ static int luamux(lua_State *L) {
 		printf("method: %s\n", method);
 		printf("argument: %s\n", argument);
 		printf("typestr: %s\n", typestr);
+		printf("request number: %d\n", requestn);
 		printf("-------------------------------------------------------\n");
 	}
 
-	muxrpc_call(&bs, method, argument, type, typestr, 1);
+	muxrpc_call(&bs, method, argument, type, typestr, requestn);
 
 	switch (type) {
 		case muxrpc_type_async:
-			rc = muxrpc_read_async(L, &bs, fd, 1);
+			rc = muxrpc_read_async(L, &bs, fd, requestn);
 			break;
 		case muxrpc_type_source:
 			lua_newtable(L);
-			rc = muxrpc_read_source(L, &bs, fd, 1);
+			rc = muxrpc_read_source(L, &bs, fd, requestn);
 			break;
 		case muxrpc_type_sink:
 			if (!strcmp(methodstr, "blobs.add")) {
-				rc = muxrpc_write_blob_add(L, &bs, STDIN_FILENO, fd, 1);
+				rc = muxrpc_write_blob_add(L, &bs, STDIN_FILENO, fd, requestn);
 			} else {
-				rc = muxrpc_write_sink(L, &bs, STDIN_FILENO, ptype, 1);
+				rc = muxrpc_write_sink(L, &bs, STDIN_FILENO, ptype, requestn);
 			}
 			break;
 		case muxrpc_type_duplex:
-			rc = muxrpc_duplex(L, &bs, STDIN_FILENO, fd, ptype, 1);
+			rc = muxrpc_duplex(L, &bs, STDIN_FILENO, fd, ptype, requestn);
 			break;
 	}
 
@@ -1155,6 +1156,8 @@ int main(int argc, char *argv[]) {
 	bool ipv6_arg = false;
 	bool passthrough = false;
 	enum ip_family ip_family;
+
+	srand(time(NULL));
 	
 	// Create new interpreter
 	lua_State *L = luaL_newstate();

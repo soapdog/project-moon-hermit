@@ -8,7 +8,7 @@ BINDIR = $(PREFIX)/bin
 MANDIR = $(PREFIX)/share/man
 
 
-CFLAGS = -Wall -Werror -Wextra -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -I$(PWD)/vendor/$(LUA)/src -I$(PWD)/vendor/$(SODIUM)/sodium-build/include
+CFLAGS = -Wall -Werror -Wextra -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-unused-parameter -Wno-unused-function -I$(PWD)/vendor/$(LUA)/src -I$(PWD)/vendor/$(SODIUM)/sodium-build/include
 
 ifdef SHARED
 	LDLIBS = -lsodium -llua5.4

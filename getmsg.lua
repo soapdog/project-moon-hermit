@@ -5,6 +5,7 @@
 
 local utils = require "utils"
 local supernova = require "supernova"
+local pprint = require "pprint"
 
 local msg, error = ssb:get({id = arg[1]})
 
@@ -17,6 +18,8 @@ if (not error) then
       utils.textwrap(msg.content.text),
       { '#FF0000', '#FFFF00', '#00FF00', '#0FF0FE', '#233CFE' }
     ))
+
+    pprint(msg)
 else
     print(error)
 end

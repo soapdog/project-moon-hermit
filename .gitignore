@@ -8,6 +8,31 @@ moonhermit-static
 *.la
 *.dylib
 *.o
+*.lo
+/vendor/*/test/default/.libs/
+*.log
+
+*.bc
+*.dSYM
+*.done
+*.final
+*.gcda
+*.gcno
+*.i
+*.la
+*.lo
+*.log
+*.mem
+*.nexe
+*.o
+*.plist
+*.scan
+*.sdf
+*.status
+*.tar.*
+*.wasm
+*.wast
+*~
 
 
 .DS_Store
